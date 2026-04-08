@@ -21,3 +21,4 @@ Thumbs.db
 # Local secrets
 .env
 .env.*
+duifenyi.ini
