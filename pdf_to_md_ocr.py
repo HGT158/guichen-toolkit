@@ -10,20 +10,23 @@ from typing import Any
 import fitz
 
 
-DEFAULT_PDF_PATTERN = "*AgenticRAG*Enterprise Knowledge Bases.pdf"
+BASE_DIR = Path(__file__).parent
+SOURCE_DIR = BASE_DIR / "pdf2md" / "source"
+RESULT_DIR = BASE_DIR / "pdf2md" / "result"
 
 
-def default_output_path(pdf_path: Path) -> Path:
-    return pdf_path.with_suffix(".md")
+def default_output_path(pdf_path: Path, output_dir: Path = RESULT_DIR) -> Path:
+    return output_dir / pdf_path.with_suffix(".md").name
 
 
-def find_default_pdf(search_dir: Path) -> Path:
-    matches = sorted(search_dir.glob(DEFAULT_PDF_PATTERN))
-    if not matches:
-        raise FileNotFoundError(
-            f"No PDF matching {DEFAULT_PDF_PATTERN!r} found in {search_dir}"
-        )
-    return matches[0]
+def find_source_pdfs(source_dir: Path = SOURCE_DIR) -> list[Path]:
+    if not source_dir.exists():
+        raise FileNotFoundError(f"Source folder not found: {source_dir}")
+
+    pdfs = sorted(path for path in source_dir.glob("*.pdf") if path.is_file())
+    if not pdfs:
+        raise FileNotFoundError(f"No PDF files found in {source_dir}")
+    return pdfs
 
 
 def rapidocr_result_to_text(result: Any) -> str:
@@ -81,6 +84,7 @@ def convert_pdf_to_markdown(
     if not pdf_path.exists():
         raise FileNotFoundError(f"PDF not found: {pdf_path}")
 
+    output_path.parent.mkdir(parents=True, exist_ok=True)
     ocr_engine = _create_ocr_engine() if ocr_images else None
     pages: list[dict[str, Any]] = []
 
@@ -113,21 +117,32 @@ def convert_pdf_to_markdown(
     return output_path
 
 
+def convert_source_folder_to_markdown(
+    source_dir: Path = SOURCE_DIR,
+    result_dir: Path = RESULT_DIR,
+    *,
+    ocr_images: bool = True,
+) -> list[Path]:
+    source_dir = source_dir.resolve()
+    result_dir = result_dir.resolve()
+    result_dir.mkdir(parents=True, exist_ok=True)
+
+    output_paths: list[Path] = []
+    for pdf_path in find_source_pdfs(source_dir):
+        output_path = default_output_path(pdf_path, result_dir)
+        output_paths.append(
+            convert_pdf_to_markdown(
+                pdf_path,
+                output_path,
+                ocr_images=ocr_images,
+            )
+        )
+    return output_paths
+
+
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Convert a PDF to Markdown and OCR every embedded page image.",
-    )
-    parser.add_argument(
-        "pdf",
-        nargs="?",
-        type=Path,
-        help="PDF file to convert. Defaults to the AgenticRAG paper in this folder.",
-    )
-    parser.add_argument(
-        "-o",
-        "--output",
-        type=Path,
-        help="Markdown output path. Defaults to the PDF filename with .md suffix.",
+        description="Convert every PDF in pdf2md/source to Markdown in pdf2md/result.",
     )
     parser.add_argument(
         "--no-image-ocr",
@@ -139,13 +154,12 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
-    pdf_path = args.pdf or find_default_pdf(Path(__file__).parent)
-    output_path = convert_pdf_to_markdown(
-        pdf_path,
-        args.output,
+    output_paths = convert_source_folder_to_markdown(
         ocr_images=not args.no_image_ocr,
     )
-    print(f"Wrote Markdown: {output_path}")
+    for output_path in output_paths:
+        print(f"Wrote Markdown: {output_path}")
+    print(f"Converted {len(output_paths)} PDF file(s).")
     return 0
 
 
