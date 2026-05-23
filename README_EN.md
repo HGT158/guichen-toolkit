@@ -9,6 +9,9 @@ A personal Python script repository for automation, utility scripts, image proce
 ```text
 .
 ├── pdf_to_md_ocr.py              # PDF to Markdown + OCR
+├── pdf2md/                       # Batch PDF conversion input/output folders
+│   ├── source/                   # Put source PDFs here
+│   └── result/                   # Generated Markdown files
 ├── main - retry.py               # Duifene auto sign-in (Tkinter GUI)
 ├── openrouter模型自动获取.py      # OpenRouter model list fetcher
 ├── 图片转latex(…).py             # Image to LaTeX color blocks
@@ -33,15 +36,20 @@ Converts a PDF into structured Markdown and performs OCR on every embedded image
 
 - Extracts page text with PyMuPDF (`fitz`).
 - Runs RapidOCR on embedded PDF images.
-- Supports custom input PDF and Markdown output paths.
+- Batch reads all `.pdf` files from `pdf2md/source/` by default.
+- Saves generated Markdown files to `pdf2md/result/` with the same base filename as each PDF.
 - Supports `--no-image-ocr` to skip image OCR.
-- By default, looks for files matching `*AgenticRAG*Enterprise Knowledge Bases.pdf` in the script directory.
 
 ```bash
 python pdf_to_md_ocr.py
-python pdf_to_md_ocr.py paper.pdf -o output.md
-python pdf_to_md_ocr.py paper.pdf --no-image-ocr
+python pdf_to_md_ocr.py --no-image-ocr
 ```
+
+Usage:
+
+1. Put PDF files into `pdf2md/source/`.
+2. Run `python pdf_to_md_ocr.py`.
+3. Check generated Markdown files in `pdf2md/result/`.
 
 ### 2. `main - retry.py`
 

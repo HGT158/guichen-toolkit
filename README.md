@@ -9,6 +9,9 @@
 ```text
 .
 ├── pdf_to_md_ocr.py              # PDF 转 Markdown + OCR
+├── pdf2md/                       # PDF 批量转换输入/输出目录
+│   ├── source/                   # 放入待转换 PDF
+│   └── result/                   # 输出 Markdown
 ├── main - retry.py               # 对分易自动签到（Tkinter GUI）
 ├── openrouter模型自动获取.py      # OpenRouter 模型列表获取
 ├── 图片转latex(…).py             # 图片转 LaTeX 彩色块
@@ -33,15 +36,20 @@
 
 - 使用 PyMuPDF (`fitz`) 提取页面文字。
 - 使用 RapidOCR 对 PDF 中的嵌入图片进行文字识别。
-- 支持指定输入 PDF、输出 Markdown 路径。
+- 默认批量读取 `pdf2md/source/` 中的所有 `.pdf` 文件。
+- 转换结果自动保存到 `pdf2md/result/`，文件名与 PDF 同名，扩展名为 `.md`。
 - 支持通过 `--no-image-ocr` 跳过图片 OCR。
-- 默认查找脚本目录下匹配 `*AgenticRAG*Enterprise Knowledge Bases.pdf` 的文件。
 
 ```bash
 python pdf_to_md_ocr.py
-python pdf_to_md_ocr.py paper.pdf -o output.md
-python pdf_to_md_ocr.py paper.pdf --no-image-ocr
+python pdf_to_md_ocr.py --no-image-ocr
 ```
+
+使用方式：
+
+1. 将 PDF 文件放入 `pdf2md/source/`。
+2. 运行 `python pdf_to_md_ocr.py`。
+3. 在 `pdf2md/result/` 查看生成的 Markdown 文件。
 
 ### 2. `main - retry.py`
 
